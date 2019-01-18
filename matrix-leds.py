@@ -18,7 +18,7 @@ class Matrix:
         self.client = opc.Client('localhost:7890')
 
         self.wheel = []
-        while len(self.wheel) < num_leds:
+        while len(self.wheel) < self.num_leds:
             self.wheel += self._make_segment()
         self.wheel = self.wheel[::-1]
 
@@ -26,15 +26,15 @@ class Matrix:
     def start(self):
 
 
-        pixels = self.wheel[:num_leds]
+        pixels = self.wheel[:self.num_leds]
         start_pixel = 0
 
         while not self._stop:
 
-            for j in range(num_leds):
+            for j in range(self.um_leds):
                 pixels[-j] = self.wheel[(j+start_pixel) % len(self.wheel)]
 
-            self.client.put_pixels(pixels[:num_leds])
+            self.client.put_pixels(pixels[:self.num_leds])
             time.sleep(self.refresh)
 
             start_pixel += 1
@@ -45,7 +45,7 @@ class Matrix:
         self._stop = True
         sleep(self.refresh + .1)
 
-        self.client.put_pixels( [(0,0,0) ] * num_leds )
+        self.client.put_pixels( [(0,0,0) ] * self.num_leds )
 
 
 
