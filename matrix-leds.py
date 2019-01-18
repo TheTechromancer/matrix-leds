@@ -23,7 +23,7 @@ class Matrix:
         self.wheel = self.wheel[::-1]
 
 
-    def start():
+    def start(self):
 
 
         pixels = self.wheel[:num_leds]
@@ -40,7 +40,7 @@ class Matrix:
             start_pixel += 1
 
 
-    def stop():
+    def stop(self):
 
         self._stop = True
         sleep(self.refresh + .1)
