@@ -35,7 +35,7 @@ class Matrix:
                 pixels[-j] = self.wheel[(j+start_pixel) % len(self.wheel)]
 
             self.client.put_pixels(pixels[:self.num_leds])
-            time.sleep(self.refresh)
+            sleep(self.refresh)
 
             start_pixel += 1
 
