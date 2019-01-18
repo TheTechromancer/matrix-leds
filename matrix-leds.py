@@ -31,7 +31,7 @@ class Matrix:
 
         while not self._stop:
 
-            for j in range(self.um_leds):
+            for j in range(self.num_leds):
                 pixels[-j] = self.wheel[(j+start_pixel) % len(self.wheel)]
 
             self.client.put_pixels(pixels[:self.num_leds])
