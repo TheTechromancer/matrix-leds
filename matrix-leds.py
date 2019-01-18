@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys
-import opc, time                                                                                                                                                                              
+import lib.opc, time                                                                                                                                                                              
 from random import randint
 
 
