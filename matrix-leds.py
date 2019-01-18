@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 import sys
-import time               
 from lib import opc                                                                                                                                                               
+from time import sleep
 from random import randint
 
 
