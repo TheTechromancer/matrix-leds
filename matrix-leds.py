@@ -13,7 +13,7 @@ class Matrix:
         self.num_leds = num_leds
         self.brightness = brightness
         self.refresh = refresh
-        self.stop = False
+        self._stop = False
 
         self.client = opc.Client('localhost:7890')
 
@@ -29,7 +29,7 @@ class Matrix:
         pixels = self.wheel[:num_leds]
         start_pixel = 0
 
-        while not self.stop:
+        while not self._stop:
 
             for j in range(num_leds):
                 pixels[-j] = self.wheel[(j+start_pixel) % len(self.wheel)]
@@ -42,7 +42,7 @@ class Matrix:
 
     def stop():
 
-        self.stop = True
+        self._stop = True
         sleep(self.refresh + .1)
 
         self.client.put_pixels( [(0,0,0) ] * num_leds )
