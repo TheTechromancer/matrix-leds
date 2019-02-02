@@ -10,7 +10,7 @@ from random import randint
 ### DEFAULTS ###
 
 num_leds = 240
-num_segments = int(num_leds / 10)
+num_segments = int(num_leds / 5)
 
 
 
@@ -34,6 +34,10 @@ class DataFlow:
 
         self.segments = list(self._make_segments())
 
+        # randomize starting positions
+        for segment in self.segments:
+            segment.pos = randint(0, self.num_leds)
+
 
 
     def start(self):
@@ -55,8 +59,9 @@ class DataFlow:
                     pixels[pixel_pos] = self._merge_pixels(old_pixel, new_pixel)
 
 
-            self.client.put_pixels(pixels[:self.num_leds][::self.direction])
-            #print(pixels)
+            pixels = pixels[:self.num_leds][::self.direction]
+            self.client.put_pixels(pixels)
+            #print([p[1] for p in pixels])
             sleep(self.refresh)
 
 
@@ -73,8 +78,8 @@ class DataFlow:
 
         segment_length = int(_min)
         for i in range(self.num_segments):
-            segment = Segment(length=segment_length, brightness=self.brightness)
-            segment_length = min(_max, max(_min, int(segment_length + (_max / self.num_segments)) ))
+            segment = Segment(length=int(segment_length), brightness=self.brightness)
+            segment_length = min(_max, max(_min, segment_length + (_max / self.num_segments)) )
             yield segment
 
 
@@ -84,7 +89,7 @@ class DataFlow:
         new_pixel = [0,0,0]
 
         for i in range(3):
-            new_pixel[i] = min((self.brightness*255), max(0, int(pixel1[i] + pixel2[i])))
+            new_pixel[i] = int( min((self.brightness*255), max(0, pixel1[i] + pixel2[i])) )
 
         return tuple(new_pixel)
 
@@ -110,7 +115,7 @@ class Segment(list):
 
         for base in range(len(color)):
             if color[base] >= 0:
-                pixel[base] = self.brightness * color[base]
+                pixel[base] = int(self.brightness * color[base])
 
         for i in range(self.length):
             self.append(tuple(pixel))
