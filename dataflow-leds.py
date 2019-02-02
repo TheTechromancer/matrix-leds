@@ -10,7 +10,7 @@ from random import randint
 ### DEFAULTS ###
 
 num_leds = 240
-num_segments = int(num_leds / 5)
+num_segments = int(num_leds / 3)
 
 
 
@@ -18,7 +18,7 @@ num_segments = int(num_leds / 5)
 
 class DataFlow:
 
-    def __init__(self, num_leds=60, num_segments=10, brightness=.75, refresh=.05, direction=-1):
+    def __init__(self, num_leds=60, num_segments=10, brightness=1, refresh=.05, direction=-1):
 
         self.num_leds = num_leds
         self.num_segments = num_segments
