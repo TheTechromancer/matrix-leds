@@ -8,7 +8,7 @@ from random import randint
 
 class Matrix:
 
-    def __init__(self, num_leds=120, brightness=.75, refresh=.4):
+    def __init__(self, num_leds=240, brightness=.8, refresh=.3):
 
         self.num_leds = num_leds
         self.brightness = brightness
@@ -45,7 +45,7 @@ class Matrix:
         self._stop = True
         sleep(self.refresh + .1)
 
-        self.client.put_pixels( [(0,0,0) ] * self.num_leds )
+        self.client.put_pixels( [(0,0,0)] * self.num_leds )
 
 
 
