@@ -6,8 +6,8 @@ Conflicts=matrix-leds.service
 [Service]
 Type=exec
 WorkingDirectory=/opt/matrix-leds
-ExecStart=/usr/bin/env python /opt/matrix-leds/dataflow-leds.py
-ExecStop=/usr/bin/env python /opt/matrix-leds/dataflow-leds.py stop
+ExecStart=/usr/bin/env python3 /opt/matrix-leds/dataflow-leds.py
+ExecStop=/usr/bin/env python3 /opt/matrix-leds/dataflow-leds.py stop
 Restart=always
 
 [Install]
