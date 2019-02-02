@@ -1,19 +1,33 @@
 #!/usr/bin/env python3
 
+# by TheTechromancer
+
 import sys
 from lib import opc                                                                                                                                                               
 from time import sleep
 from random import randint
 
+### DEFAULTS ###
+
+num_leds = 240
+num_segments = int(num_leds / 10)
+
+
+
+### CLASSES ###
 
 class DataFlow:
 
-    def __init__(self, num_leds=60, num_segments=10, brightness=.75, refresh=.05):
+    def __init__(self, num_leds=60, num_segments=10, brightness=.75, refresh=.05, direction=-1):
 
         self.num_leds = num_leds
         self.num_segments = num_segments
-        self.brightness = brightness
+        self.brightness = min(1, max(0, brightness))
         self.refresh = refresh
+        
+        assert direction in (1, -1), '"direction" must be either 1 or -1'
+        self.direction = direction
+
         self._stop = False
 
         self.client = opc.Client('localhost:7890')
@@ -41,7 +55,7 @@ class DataFlow:
                     pixels[pixel_pos] = self._merge_pixels(old_pixel, new_pixel)
 
 
-            self.client.put_pixels(pixels[:self.num_leds])
+            self.client.put_pixels(pixels[:self.num_leds][::self.direction])
             #print(pixels)
             sleep(self.refresh)
 
@@ -65,13 +79,12 @@ class DataFlow:
 
 
 
-    @staticmethod
-    def _merge_pixels(pixel1, pixel2):
+    def _merge_pixels(self, pixel1, pixel2):
 
         new_pixel = [0,0,0]
 
         for i in range(3):
-            new_pixel[i] = min(255, max(0, int(pixel1[i] + pixel2[i])))
+            new_pixel[i] = min((self.brightness*255), max(0, int(pixel1[i] + pixel2[i])))
 
         return tuple(new_pixel)
 
@@ -115,8 +128,7 @@ class Segment(list):
 
 if __name__ == '__main__':
 
-    d = DataFlow()
-    d.start()
+    d = DataFlow(num_leds=num_leds, num_segments=num_segments)
     '''
     for i in [1, 10, 20, 30]:
         test = Segment(length=i)
@@ -127,7 +139,6 @@ if __name__ == '__main__':
         print('=' * 20)
     '''
 
-    '''
     try:
         if len(sys.argv) <= 1:
             d.start()
@@ -135,4 +146,3 @@ if __name__ == '__main__':
         print('[!] {}'.format(str(e)))
     finally:
         d.stop()
-    '''
