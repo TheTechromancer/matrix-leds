@@ -1,7 +1,7 @@
 [Unit]
 Description=DataFlow LEDs
 Requires=fadecandy.service
-Conflicts=matrix-leds.py
+Conflicts=matrix-leds.service
 
 [Service]
 Type=exec
