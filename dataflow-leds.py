@@ -44,8 +44,8 @@ class DataFlow:
 
                 
 
-            #self.client.put_pixels(pixels[:self.num_leds])
-            print(pixels)
+            self.client.put_pixels(pixels[:self.num_leds])
+            #print(pixels)
             sleep(self.refresh)
 
 
