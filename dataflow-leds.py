@@ -20,30 +20,32 @@ class DataFlow:
 
         self.segments = []
         for s in range(num_segments):
-            self.segments.append(self._make_segment)
+            self.segments.append(self._make_segment())
 
 
 
     def start(self):
 
-
-        pixels = [(0,0,0)] * self.num_leds
-        start_pixel = 0
-
         while not self._stop:
 
+            pixels = [(0,0,0)] * self.num_leds
+
             for segment in self.segments:
+
+                segment_pos = segment.increment()
+
                 for i in range(len(segment)):
-                    pixel_pos = (segment.pos + i) % self.num_leds
+                    pixel_pos = (segment_pos + i) % self.num_leds
 
                     new_pixel = segment[i]
-                    old_pixel = self.segments[pixel_pos]
+                    old_pixel = pixels[pixel_pos]
 
                     pixels[pixel_pos] = self._merge_pixels(old_pixel, new_pixel)
 
-                segment.increment()
+                
 
-            self.client.put_pixels(pixels[:self.num_leds])
+            #self.client.put_pixels(pixels[:self.num_leds])
+            print(pixels)
             sleep(self.refresh)
 
 
@@ -113,7 +115,9 @@ class Segment(list):
 
 if __name__ == '__main__':
 
-    #d = DataFlow()
+    d = DataFlow()
+    d.start()
+    '''
     for i in [1, 10, 20, 30]:
         test = Segment(length=i)
         print('length', test.length)
@@ -121,6 +125,7 @@ if __name__ == '__main__':
         print('brightness', test.brightness)
         print(test)
         print('=' * 20)
+    '''
 
     '''
     try:
