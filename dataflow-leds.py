@@ -8,7 +8,7 @@ from random import randint
 
 class DataFlow:
 
-    def __init__(self, num_leds=60, num_segments=3, brightness=.75, refresh=.1):
+    def __init__(self, num_leds=60, num_segments=10, brightness=.75, refresh=.05):
 
         self.num_leds = num_leds
         self.num_segments = num_segments
@@ -18,9 +18,7 @@ class DataFlow:
 
         self.client = opc.Client('localhost:7890')
 
-        self.segments = []
-        for s in range(num_segments):
-            self.segments.append(self._make_segment())
+        self.segments = list(self._make_segments())
 
 
 
@@ -42,7 +40,6 @@ class DataFlow:
 
                     pixels[pixel_pos] = self._merge_pixels(old_pixel, new_pixel)
 
-                
 
             self.client.put_pixels(pixels[:self.num_leds])
             #print(pixels)
@@ -58,11 +55,14 @@ class DataFlow:
 
 
 
-    def _make_segment(self, _min=1, _max=25):
+    def _make_segments(self, _min=1, _max=30):
 
-        segment_length = randint(_min, _max)
-        segment = Segment(length=segment_length, brightness=self.brightness)
-        return segment
+        segment_length = int(_min)
+        for i in range(self.num_segments):
+            segment = Segment(length=segment_length, brightness=self.brightness)
+            segment_length = min(_max, max(_min, int(segment_length + (_max / self.num_segments)) ))
+            yield segment
+
 
 
     @staticmethod
