@@ -11,7 +11,7 @@ from statistics import mean
 ### DEFAULTS ###
 
 num_leds = 420
-num_segments = int(num_leds / 3)
+num_segments = int(num_leds / 2.5)
 
 
 
@@ -19,7 +19,7 @@ num_segments = int(num_leds / 3)
 
 class DataFlow:
 
-    def __init__(self, num_leds=60, num_segments=10, scale=5, brightness=1, refresh=.05, direction=-1):
+    def __init__(self, num_leds=60, num_segments=10, scale=1, brightness=1, refresh=.05, direction=-1):
 
         self.num_leds = num_leds
         self.num_upscaled_leds = int(num_leds * scale)
@@ -47,26 +47,26 @@ class DataFlow:
             # upscaled pixels
             pixels = [(0,0,0)] * self.num_upscaled_leds
 
+            # for every segment
             for segment in self.segments:
 
                 # increment segment's position
                 segment_pos = segment.increment()
 
-                # for every segment pixel
+                # for every pixel in this segment
                 for i in range(len(segment)):
                     pixel_pos = (segment_pos + i) % self.num_upscaled_leds
 
                     new_pixel = segment[i]
                     old_pixel = pixels[pixel_pos]
 
-                    # add it to the current pixel in that position
+                    # add it to the strip pixel in that position
                     pixels[pixel_pos] = self._add_pixels(old_pixel, new_pixel)
 
 
             pixels = pixels[:self.num_upscaled_leds][::self.direction]
-
-            self.client.put_pixels(self._downscale_pixels(pixels))
-            #print([p[1] for p in pixels])
+            pixels = self._downscale_pixels(pixels)
+            self.client.put_pixels(pixels)
             sleep(self.refresh)
 
 
