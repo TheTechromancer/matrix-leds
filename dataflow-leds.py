@@ -3,13 +3,14 @@
 # by TheTechromancer
 
 import sys
-from lib import opc                                                                                                                                                               
+from lib import opc
 from time import sleep
 from random import randint
+from statistics import mean
 
 ### DEFAULTS ###
 
-num_leds = 240
+num_leds = 420
 num_segments = int(num_leds / 3)
 
 
@@ -18,9 +19,12 @@ num_segments = int(num_leds / 3)
 
 class DataFlow:
 
-    def __init__(self, num_leds=60, num_segments=10, brightness=1, refresh=.05, direction=-1):
+    def __init__(self, num_leds=60, num_segments=10, scale=5, brightness=1, refresh=.05, direction=-1):
 
         self.num_leds = num_leds
+        self.num_upscaled_leds = int(num_leds * scale)
+        # multiplier for internally-rendered strip, which is then downscaled
+        self.scale = scale
         self.num_segments = num_segments
         self.brightness = min(1, max(0, brightness))
         self.refresh = refresh
@@ -28,46 +32,47 @@ class DataFlow:
         assert direction in (1, -1), '"direction" must be either 1 or -1'
         self.direction = direction
 
-        self._stop = False
+        self.STOP = False
 
         self.client = opc.Client('localhost:7890')
 
         self.segments = list(self._make_segments())
 
-        # randomize starting positions
-        for segment in self.segments:
-            segment.pos = randint(0, self.num_leds)
-
 
 
     def start(self):
 
-        while not self._stop:
+        while not self.STOP:
 
-            pixels = [(0,0,0)] * self.num_leds
+            # upscaled pixels
+            pixels = [(0,0,0)] * self.num_upscaled_leds
 
             for segment in self.segments:
 
+                # increment segment's position
                 segment_pos = segment.increment()
 
+                # for every segment pixel
                 for i in range(len(segment)):
-                    pixel_pos = (segment_pos + i) % self.num_leds
+                    pixel_pos = (segment_pos + i) % self.num_upscaled_leds
 
                     new_pixel = segment[i]
                     old_pixel = pixels[pixel_pos]
 
-                    pixels[pixel_pos] = self._merge_pixels(old_pixel, new_pixel)
+                    # add it to the current pixel in that position
+                    pixels[pixel_pos] = self._add_pixels(old_pixel, new_pixel)
 
 
-            pixels = pixels[:self.num_leds][::self.direction]
-            self.client.put_pixels(pixels)
+            pixels = pixels[:self.num_upscaled_leds][::self.direction]
+
+            self.client.put_pixels(self._downscale_pixels(pixels))
             #print([p[1] for p in pixels])
             sleep(self.refresh)
 
 
     def stop(self):
 
-        self._stop = True
+        self.STOP = True
         sleep(self.refresh + .1)
 
         self.client.put_pixels( [(0,0,0)] * self.num_leds )
@@ -78,35 +83,57 @@ class DataFlow:
 
         segment_length = int(_min)
         for i in range(self.num_segments):
-            segment = Segment(length=int(segment_length), brightness=self.brightness)
+            segment = Segment(length=int(segment_length), brightness=self.brightness, scale=self.scale)
             segment_length = min(_max, max(_min, segment_length + (_max / self.num_segments)) )
+            # randomize starting position
+            segment.pos = randint(0, self.num_upscaled_leds)
             yield segment
 
 
 
-    def _merge_pixels(self, pixel1, pixel2):
+    def _add_pixels(self, pixel1, pixel2):
 
         new_pixel = [0,0,0]
 
         for i in range(3):
-            new_pixel[i] = int( min((self.brightness*255), max(0, pixel1[i] + pixel2[i])) )
+            new_pixel[i] = int( min(255, min((self.brightness*255), max(0, pixel1[i] + pixel2[i]))) )
 
         return tuple(new_pixel)
+
+
+    def _downscale_pixels(self, pixels):
+
+        scale = len(pixels) / self.num_leds
+        new_pixels = []
+
+        for i in range(self.num_leds):
+            start_pixel = int(i * scale)
+            end_pixel = int((i * scale) + scale)
+
+            # take the color average of the pixel segment
+            mean_r = int(mean([c[0] for c in pixels[start_pixel:end_pixel]]))
+            mean_g = int(mean([c[1] for c in pixels[start_pixel:end_pixel]]))
+            mean_b = int(mean([c[2] for c in pixels[start_pixel:end_pixel]]))
+
+            new_pixels.append((mean_r, mean_g, mean_b))
+
+        return new_pixels
+
 
 
 
 class Segment(list):
 
-    def __init__(self, length=10, brightness=.75, color=(0,1,0)):
+    def __init__(self, length=10, brightness=.75, color=(0,1,0), scale=1):
 
         color = tuple([max(0, min(1, c)) for c in color])
 
         # length >= 1
-        self.length = max(1, int(length))
+        self.length = max(1, int(length * scale))
         # 0.05 <= speed <= 1
-        self.speed = max(.05, min(1, ( 2/self.length )))
+        self.speed = max(.05*scale, min(scale, ( scale/self.length )))
         # 0 <= brightness <= 255
-        self.brightness = max(0, min( 255, int( brightness * 255 * (1/self.length) ) ))
+        self.brightness = max(0, min( 255, int( brightness * 255 * (scale/self.length) ) ))
 
         # position
         self.pos = 0
@@ -134,20 +161,11 @@ class Segment(list):
 if __name__ == '__main__':
 
     d = DataFlow(num_leds=num_leds, num_segments=num_segments)
-    '''
-    for i in [1, 10, 20, 30]:
-        test = Segment(length=i)
-        print('length', test.length)
-        print('speed', test.speed)
-        print('brightness', test.brightness)
-        print(test)
-        print('=' * 20)
-    '''
 
     try:
         if len(sys.argv) <= 1:
             d.start()
-    except Exception as e:
-        print('[!] {}'.format(str(e)))
+    except KeyboardInterrupt:
+        print('[!] Interrupted')
     finally:
         d.stop()
