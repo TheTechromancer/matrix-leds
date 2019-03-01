@@ -11,7 +11,7 @@ from statistics import mean
 ### DEFAULTS ###
 
 num_leds = 420
-num_segments = int(num_leds / 2.5)
+num_segments = int(num_leds / 4)
 
 
 
@@ -19,7 +19,7 @@ num_segments = int(num_leds / 2.5)
 
 class DataFlow:
 
-    def __init__(self, num_leds=60, num_segments=10, scale=1, brightness=1, refresh=.05, direction=-1):
+    def __init__(self, num_leds=60, num_segments=10, scale=1, brightness=1, delay=0, direction=-1):
 
         self.num_leds = num_leds
         self.num_upscaled_leds = int(num_leds * scale)
@@ -27,7 +27,7 @@ class DataFlow:
         self.scale = scale
         self.num_segments = num_segments
         self.brightness = min(1, max(0, brightness))
-        self.refresh = refresh
+        self.delay = delay
         
         assert direction in (1, -1), '"direction" must be either 1 or -1'
         self.direction = direction
@@ -67,13 +67,13 @@ class DataFlow:
             pixels = pixels[:self.num_upscaled_leds][::self.direction]
             pixels = self._downscale_pixels(pixels)
             self.client.put_pixels(pixels)
-            sleep(self.refresh)
+            sleep(self.delay)
 
 
     def stop(self):
 
         self.STOP = True
-        sleep(self.refresh + .1)
+        sleep(self.delay + .1)
 
         self.client.put_pixels( [(0,0,0)] * self.num_leds )
 
@@ -132,8 +132,8 @@ class Segment(list):
         self.length = max(1, int(length * scale))
         # 0.05 <= speed <= 1
         self.speed = max(.05*scale, min(scale, ( scale/self.length )))
-        # 0 <= brightness <= 255
-        self.brightness = max(0, min( 255, int( brightness * 255 * (scale/self.length) ) ))
+        # 20 <= brightness <= 255
+        self.brightness = max(20, min( 255, int( brightness * 255 * (scale/self.length) ) ))
 
         # position
         self.pos = 0
